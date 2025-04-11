@@ -22,7 +22,7 @@ madb = MADB()
 preprocessor = Preprocessor()
 
 @router.post("/", response_model=list[QueryResult])
-async def query(input: QueryInput, user: User = Depends(get_current_user)):
+async def query(input: QueryInput, user: User = Depends(get_current_user), similarity_threshold: float = 0.5):
     logger.info(f"User {user.user_id} querying: {input.query}")
 
     # Clean the query input
@@ -72,22 +72,29 @@ async def query(input: QueryInput, user: User = Depends(get_current_user)):
         logger.error("Mismatch between attention scores and document vectors. Aborting.")
         return []
 
+    # Apply similarity threshold
+    filtered_results = [
+        (chunk_id, score) for chunk_id, score in zip(top_k_ids, attention_scores) if score >= similarity_threshold
+    ]
+    if not filtered_results:
+        logger.warning("No documents passed the similarity threshold.")
+        return []
+
     results = []
-    for idx, chunk_id in enumerate(top_k_ids):
+    for chunk_id, score in filtered_results:
         chunk = doc_store.load(chunk_id)
         if not chunk:
             logger.error(f"Chunk with ID {chunk_id} not found in DocumentStore.")
             continue
         results.append(QueryResult(
             doc_id=chunk.get("parent_doc_id"),
-            score=float(attention_scores[idx]),
+            score=float(score),
             text=chunk["text"],
             meta=chunk.get("meta", {})
         ))
 
-    if not results:
-        logger.warning("No results could be generated from the query.")
-        return []
+    # Feedback loop: Adjust MADB weights based on feedback 
+    # @TODO:: Incorporate user feedback to refine attention scores
 
     logger.info(f"Query results: {results}")
     # Serialize results using .dict() for JSON compatibility
