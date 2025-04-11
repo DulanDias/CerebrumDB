@@ -14,3 +14,9 @@ services:
       - DATA_STORE_TYPE=json
       - VECTOR_INDEX_PATH=vector_index/index.faiss
     restart: unless-stopped
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped

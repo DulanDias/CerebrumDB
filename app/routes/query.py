@@ -6,6 +6,7 @@ from app.core.madb import MADB
 from app.models.query import QueryInput, QueryResult
 from app.core.security import get_current_user
 from app.models.user import User
+from app.utils.cache import cache
 
 router = APIRouter()
 
@@ -15,7 +16,12 @@ doc_store = DocumentStore()
 madb = MADB()
 
 @router.post("/", response_model=list[QueryResult])
-def query(input: QueryInput, user: User = Depends(get_current_user)):
+async def query(input: QueryInput, user: User = Depends(get_current_user)):
+    cache_key = f"query:{input.query}:{input.top_k}"
+    cached_result = await cache.get(cache_key)
+    if cached_result:
+        return json.loads(cached_result)
+
     query_vec = embedder.encode(input.query)
     top_k_ids = vstore.search(query_vec, input.top_k)
 
@@ -32,4 +38,5 @@ def query(input: QueryInput, user: User = Depends(get_current_user)):
             meta=doc.get("meta", {})
         ))
 
+    await cache.set(cache_key, json.dumps(results))
     return results
