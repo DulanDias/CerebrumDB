@@ -86,6 +86,13 @@ async def query(input: QueryInput, user: User = Depends(get_current_user), simil
         if not chunk:
             logger.error(f"Chunk with ID {chunk_id} not found in DocumentStore.")
             continue
+
+        # Apply key-value filter
+        if input.filter:
+            if not all(chunk["meta"].get(k) == v for k, v in input.filter.items()):
+                logger.debug(f"Chunk {chunk_id} filtered out due to metadata mismatch.")
+                continue
+
         results.append(QueryResult(
             doc_id=chunk.get("parent_doc_id"),
             score=float(score),
