@@ -36,18 +36,20 @@ async def query(input: QueryInput, user: User = Depends(get_current_user)):
 
     query_vec = np.pad(query_vec, (0, 768 - query_vec.shape[0]))  # Ensure consistent size
     logger.debug(f"Encoded query vector: {query_vec}")
+    logger.debug(f"Query vector: {query_vec}")
 
     top_k_ids = vstore.search(query_vec, input.top_k)
     logger.debug(f"Top K IDs from VectorStore: {top_k_ids}")
 
     if not top_k_ids:  # Handle empty results
-        logger.warning("No documents found for the query.")
+        logger.warning("No documents found for the query. Check embeddings or vector store.")
         return []
 
     # Verify if vectors are retrieved correctly
     doc_vecs = []
     for doc_id in top_k_ids:
         vector = vstore.get_vector(doc_id)
+        logger.debug(f"Retrieved vector for doc_id {doc_id}: {vector}")
         if vector is None or vector.size == 0:  # Check if vector is None or empty
             logger.error(f"Vector for document ID {doc_id} not found or invalid in VectorStore.")
         else:
