@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from app.core import document_store, embedding, vector_store
 from app.models.document import DocumentInput, DocumentOutput
 from typing import Dict
+from app.core.rbac import require_role
 
 router = APIRouter()
 store = document_store.DocumentStore()
@@ -22,7 +23,7 @@ def get_document(id: str):
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="Document not found")
 
-@router.put("/{id}")
+@router.put("/{id}", dependencies=[Depends(require_role("admin", "editor"))])
 def update_document(id: str, doc: DocumentInput):
     try:
         store.delete(id)
@@ -33,7 +34,7 @@ def update_document(id: str, doc: DocumentInput):
     vstore.add(doc_id, vector)
     return {"doc_id": doc_id, "status": "updated"}
 
-@router.delete("/{id}")
+@router.delete("/{id}", dependencies=[Depends(require_role("admin"))])
 def delete_document(id: str):
     try:
         store.delete(id)
