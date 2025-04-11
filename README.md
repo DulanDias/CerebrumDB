@@ -138,6 +138,6 @@ MIT License — free for academic, commercial, and internal use.
 
 ## 🌐 Links
 
-<!-- - Website: [https://cerebrumdb.ai](https://cerebrumdb.ai) *(optional placeholder)* -->
+<!-- - Website: [https://cerebrumdb.com](https://cerebrumdb.com)-->
 - Docs: Coming soon
 - Author: [Dulan S. Dias](https://dulandias.com)
