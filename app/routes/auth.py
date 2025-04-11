@@ -1,3 +1,5 @@
+from app.config import REFRESH_TOKEN_EXPIRE_HOURS
+
 from fastapi import APIRouter, HTTPException, Form, Depends
 from pydantic import BaseModel
 from typing import Dict, Optional
