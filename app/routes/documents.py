@@ -7,6 +7,9 @@ from app.core.security import get_current_user
 from typing import Dict
 from app.core.embedding import EmbeddingEngine
 from app.utils.logger import logger
+from uuid import uuid4  # Add this import for generating unique IDs
+from numpy import ndarray
+import numpy as np
 
 router = APIRouter()
 
@@ -22,15 +25,25 @@ def add_document(doc: DocumentInput, user: User = Depends(get_current_user)):
     """
     # Preprocess and chunk the document
     embeddings, chunks = embedder.encode(doc.text)
+    if not all(isinstance(embedding, ndarray) for embedding in embeddings):
+        raise HTTPException(status_code=400, detail="Invalid embeddings generated.")
+
+    # Ensure consistent vector shape
+    max_dim = max(embedding.shape[0] for embedding in embeddings)
+    embeddings = [np.pad(embedding, (0, max_dim - embedding.shape[0])) if embedding.shape[0] < max_dim else embedding[:max_dim] for embedding in embeddings]
+
     full_doc = doc.dict()
     full_doc["owner"] = user.user_id
+    full_doc["doc_id"] = str(uuid4())  # Generate a unique doc_id
 
     # Save each chunk with metadata
     chunk_ids = []
     for idx, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+        if embedding.ndim != 1:
+            raise HTTPException(status_code=400, detail="Embedding dimensions are inconsistent.")
         chunk_metadata = {
             "chunk_id": f"{idx}",
-            "parent_doc_id": full_doc.get("doc_id", None),
+            "parent_doc_id": full_doc["doc_id"],  # Use the generated doc_id
             "text": chunk,
             "meta": doc.meta,
         }
@@ -39,7 +52,7 @@ def add_document(doc: DocumentInput, user: User = Depends(get_current_user)):
         chunk_ids.append(chunk_id)
 
     logger.info(f"Document added with chunks: {chunk_ids}")
-    return {"doc_id": full_doc.get("doc_id", None), "chunk_ids": chunk_ids}
+    return {"doc_id": full_doc["doc_id"], "chunk_ids": chunk_ids}
 
 @router.get("/{id}")
 def get_document(id: str, user: User = Depends(get_current_user)):

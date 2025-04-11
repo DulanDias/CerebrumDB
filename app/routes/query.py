@@ -1,4 +1,5 @@
 import json
+import numpy as np
 from fastapi import APIRouter, Depends
 from app.core.embedding import EmbeddingEngine
 from app.core.vector_store import VectorStore
@@ -28,7 +29,12 @@ async def query(input: QueryInput, user: User = Depends(get_current_user)):
         logger.debug("Cache hit. Returning cached results.")
         return json.loads(cached_result)
 
-    query_vec = embedder.encode(input.query)
+    query_vec = embedder.encode(input.query, is_query=True)  # Pass is_query=True
+    if query_vec is None or query_vec.size == 0:  # Explicitly check if query_vec is empty or None
+        logger.error("Query vector is empty or invalid. Aborting.")
+        return []
+
+    query_vec = np.pad(query_vec, (0, 768 - query_vec.shape[0]))  # Ensure consistent size
     logger.debug(f"Encoded query vector: {query_vec}")
 
     top_k_ids = vstore.search(query_vec, input.top_k)
@@ -42,19 +48,21 @@ async def query(input: QueryInput, user: User = Depends(get_current_user)):
     doc_vecs = []
     for doc_id in top_k_ids:
         vector = vstore.get_vector(doc_id)
-        if vector is None:
-            logger.error(f"Vector for document ID {doc_id} not found in VectorStore.")
+        if vector is None or vector.size == 0:  # Check if vector is None or empty
+            logger.error(f"Vector for document ID {doc_id} not found or invalid in VectorStore.")
         else:
+            vector = np.pad(vector, (0, 768 - vector.shape[0]))  # Ensure consistent size
             doc_vecs.append(vector)
     logger.debug(f"Document vectors retrieved: {doc_vecs}")
 
-    # Ensure query vector and document vectors are valid
-    if not query_vec or not doc_vecs:
-        logger.error("Query vector or document vectors are invalid. Aborting.")
+    if len(doc_vecs) == 0:  # Explicitly check if doc_vecs is empty
+        logger.error("No valid document vectors retrieved. Aborting.")
         return []
 
     attention_scores = madb.compute_attention(query_vec, doc_vecs)
-    logger.debug(f"Attention scores: {attention_scores}")
+    if len(attention_scores) != len(doc_vecs):  # Validate attention scores length
+        logger.error("Mismatch between attention scores and document vectors. Aborting.")
+        return []
 
     results = []
     for idx, chunk_id in enumerate(top_k_ids):
