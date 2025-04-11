@@ -40,6 +40,7 @@ class UserCreate(BaseModel):
 
 class TokenResponse(BaseModel):
     access_token: str
+    refresh_token: Optional[str] = None
     token_type: str = "bearer"
 
 # ---- Endpoints ----
@@ -72,15 +73,30 @@ def login(user_id: str = Form(...), password: str = Form(...)):
         if not user or not pwd_context.verify(password, user["password_hash"]):
             raise HTTPException(401, "Invalid credentials")
         
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        payload = {
+        # Generate access token
+        access_expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_payload = {
             "sub": user["user_id"],
             "role": user["role"],
-            "exp": expire
+            "exp": access_expire
         }
-        token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+        access_token = jwt.encode(access_payload, SECRET_KEY, algorithm=ALGORITHM)
+
+        # Generate refresh token
+        refresh_expire = datetime.utcnow() + timedelta(hours=REFRESH_TOKEN_EXPIRE_HOURS)
+        refresh_payload = {
+            "sub": user["user_id"],
+            "type": "refresh",
+            "exp": refresh_expire
+        }
+        refresh_token = jwt.encode(refresh_payload, SECRET_KEY, algorithm=ALGORITHM)
+
         logger.info(f"User {user_id} logged in successfully")
-        return TokenResponse(access_token=token)
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
     except Exception as e:
         logger.error(f"Login failed for user {user_id}: {e}")
         raise
@@ -92,3 +108,28 @@ def get_user(user_id: str):
     if not user:
         raise HTTPException(404, "User not found")
     return User(user_id=user["user_id"], role=user["role"])
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_token(refresh_token: str = Form(...)):
+    try:
+        # Decode the refresh token
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "refresh":
+            raise HTTPException(401, "Invalid token type")
+
+        # Generate a new access token
+        access_expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_payload = {
+            "sub": payload["sub"],
+            "role": payload["role"],
+            "exp": access_expire
+        }
+        access_token = jwt.encode(access_payload, SECRET_KEY, algorithm=ALGORITHM)
+
+        logger.info(f"Access token refreshed for user {payload['sub']}")
+        return {
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
+    except JWTError:
+        raise HTTPException(401, "Invalid or expired refresh token")

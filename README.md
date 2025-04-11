@@ -183,6 +183,23 @@ You can explore the API interactively at:
 http://localhost:8000/docs
 ```
 
+### 🔄 Refresh Access Token
+
+```bash
+POST /user/refresh
+Content-Type: application/x-www-form-urlencoded
+
+refresh_token=<refresh_token>
+```
+
+Returns:
+```bash
+{
+  "access_token": "new_access_token",
+  "token_type": "bearer"
+}
+```
+
 ---
 ## ⚙️ Configuration
 
