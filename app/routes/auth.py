@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 from jose import jwt
 from datetime import datetime, timedelta
 from app.models.user import User
+from app.utils.logger import logger
 
 router = APIRouter()
 
@@ -65,19 +66,24 @@ def create_user(user: UserCreate):
 
 @router.post("/token", response_model=TokenResponse)
 def login(user_id: str = Form(...), password: str = Form(...)):
-    db = load_user_db()
-    user = db.get(user_id)
-    if not user or not pwd_context.verify(password, user["password_hash"]):
-        raise HTTPException(401, "Invalid credentials")
-    
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    payload = {
-        "sub": user["user_id"],
-        "role": user["role"],
-        "exp": expire
-    }
-    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
-    return TokenResponse(access_token=token)
+    try:
+        db = load_user_db()
+        user = db.get(user_id)
+        if not user or not pwd_context.verify(password, user["password_hash"]):
+            raise HTTPException(401, "Invalid credentials")
+        
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        payload = {
+            "sub": user["user_id"],
+            "role": user["role"],
+            "exp": expire
+        }
+        token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+        logger.info(f"User {user_id} logged in successfully")
+        return TokenResponse(access_token=token)
+    except Exception as e:
+        logger.error(f"Login failed for user {user_id}: {e}")
+        raise
 
 @router.get("/{user_id}", response_model=User)
 def get_user(user_id: str):
