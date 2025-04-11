@@ -57,16 +57,16 @@ async def query(input: QueryInput, user: User = Depends(get_current_user)):
     logger.debug(f"Attention scores: {attention_scores}")
 
     results = []
-    for idx, doc_id in enumerate(top_k_ids):
-        doc = doc_store.load(doc_id)
-        if not doc:
-            logger.error(f"Document with ID {doc_id} not found in DocumentStore.")
+    for idx, chunk_id in enumerate(top_k_ids):
+        chunk = doc_store.load(chunk_id)
+        if not chunk:
+            logger.error(f"Chunk with ID {chunk_id} not found in DocumentStore.")
             continue
         results.append(QueryResult(
-            doc_id=doc_id,
+            doc_id=chunk.get("parent_doc_id"),
             score=float(attention_scores[idx]),
-            text=doc["text"],
-            meta=doc.get("meta", {})
+            text=chunk["text"],
+            meta=chunk.get("meta", {})
         ))
 
     if not results:

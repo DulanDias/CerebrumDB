@@ -207,10 +207,12 @@ You can customize your CerebrumDB setup via `.env` or `config.py`:
 
 ```env
 TRANSFORMER_MODEL=all-mpnet-base-v2
-CONTINUAL_LEARNING=true
-DATA_STORE_TYPE=binary  # or json
-VECTOR_INDEX_PATH=vector_index/index.faiss
+CHUNKING_ENABLED=true
+CHUNK_SIZE=100
 ```
+
+- `CHUNKING_ENABLED`: Enable or disable text chunking (default: true).
+- `CHUNK_SIZE`: Number of words per chunk (default: 100).
 
 ---
 

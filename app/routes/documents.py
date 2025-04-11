@@ -20,13 +20,26 @@ def add_document(doc: DocumentInput, user: User = Depends(get_current_user)):
     """
     Add a new document. Only 'admin' and 'editor' roles are allowed.
     """
-    vector = embedder.encode(doc.text)
+    # Preprocess and chunk the document
+    embeddings, chunks = embedder.encode(doc.text)
     full_doc = doc.dict()
     full_doc["owner"] = user.user_id
-    doc_id = store.save(full_doc)
-    vstore.add(doc_id, vector)
-    logger.info(f"Document added: {doc_id}, Vector added to VectorStore.")
-    return {"doc_id": doc_id}
+
+    # Save each chunk with metadata
+    chunk_ids = []
+    for idx, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+        chunk_metadata = {
+            "chunk_id": f"{idx}",
+            "parent_doc_id": full_doc.get("doc_id", None),
+            "text": chunk,
+            "meta": doc.meta,
+        }
+        chunk_id = store.save(chunk_metadata)
+        vstore.add(chunk_id, embedding)
+        chunk_ids.append(chunk_id)
+
+    logger.info(f"Document added with chunks: {chunk_ids}")
+    return {"doc_id": full_doc.get("doc_id", None), "chunk_ids": chunk_ids}
 
 @router.get("/{id}")
 def get_document(id: str, user: User = Depends(get_current_user)):
