@@ -18,7 +18,6 @@ madb = MADB()
 
 @router.post("/", response_model=list[QueryResult])
 async def query(input: QueryInput, user: User = Depends(get_current_user)):
-
     logger.info(f"User {user.user_id} querying: {input.query}")
 
     cache_key = f"query:{input.query}:{input.top_k}"
@@ -28,6 +27,10 @@ async def query(input: QueryInput, user: User = Depends(get_current_user)):
 
     query_vec = embedder.encode(input.query)
     top_k_ids = vstore.search(query_vec, input.top_k)
+
+    if not top_k_ids:  # Handle empty results
+        logger.warning("No documents found for the query.")
+        return []
 
     logger.debug(f"Top K IDs: {top_k_ids}")
     doc_vecs = [embedder.encode(doc_store.load(doc_id)["text"]) for doc_id in top_k_ids]
