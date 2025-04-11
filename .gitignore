@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+*.egg-info/
+*.egg
+*.log
+
+# FastAPI/OpenAPI
+.env
+*.env
+
+# FAISS and binary vector data
+vector_index/
+*.faiss
+*.hnsw
+*.bin
+*.npy
+
+# Data store files
+data_store/
+data_store_binary/
+*.jsonl
+*.json
+
+# Embeddings cache
+embeddings/
+*.pt
+*.pkl
+
+# VSCode and IDEs
+.vscode/
+.idea/
+*.swp
+
+# Virtualenv
+.venv/
+env/
+venv/
+
+# Docker
+*.pid
+*.db
+*.sock
+docker-compose.override.yml
+
+# Logs
+logs/
+*.log
+
+# Tests and coverage
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
