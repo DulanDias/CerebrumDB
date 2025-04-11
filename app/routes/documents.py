@@ -5,12 +5,15 @@ from app.models.user import User
 from app.core.rbac import require_role
 from app.core.security import get_current_user
 from typing import Dict
+from app.core.embedding import EmbeddingEngine
+from app.utils.logger import logger
 
 router = APIRouter()
 
-store = document_store.DocumentStore()
-embedder = embedding.EmbeddingEngine()
-vstore = vector_store.VectorStore()
+# These will be injected from main.py
+store = None
+vstore = None
+embedder = EmbeddingEngine()
 
 @router.post("/", response_model=DocumentOutput, dependencies=[Depends(require_role("admin", "editor"))])
 def add_document(doc: DocumentInput, user: User = Depends(get_current_user)):
@@ -22,6 +25,7 @@ def add_document(doc: DocumentInput, user: User = Depends(get_current_user)):
     full_doc["owner"] = user.user_id
     doc_id = store.save(full_doc)
     vstore.add(doc_id, vector)
+    logger.info(f"Document added: {doc_id}, Vector added to VectorStore.")
     return {"doc_id": doc_id}
 
 @router.get("/{id}")
