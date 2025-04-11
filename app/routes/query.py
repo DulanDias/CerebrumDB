@@ -10,6 +10,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.utils.cache import cache
 from app.utils.logger import logger
+from app.utils.preprocessor import Preprocessor
 
 router = APIRouter()
 
@@ -18,18 +19,23 @@ vstore = None
 doc_store = None
 embedder = EmbeddingEngine()
 madb = MADB()
+preprocessor = Preprocessor()
 
 @router.post("/", response_model=list[QueryResult])
 async def query(input: QueryInput, user: User = Depends(get_current_user)):
     logger.info(f"User {user.user_id} querying: {input.query}")
 
-    cache_key = f"query:{input.query}:{input.top_k}"
+    # Clean the query input
+    cleaned_query = preprocessor.clean_text(input.query)
+    logger.debug(f"Cleaned query: {cleaned_query}")
+
+    cache_key = f"query:{cleaned_query}:{input.top_k}"
     cached_result = await cache.get(cache_key)
     if cached_result:
         logger.debug("Cache hit. Returning cached results.")
         return json.loads(cached_result)
 
-    query_vec = embedder.encode(input.query, is_query=True)  # Pass is_query=True
+    query_vec = embedder.encode(cleaned_query, is_query=True)  # Pass cleaned query
     if query_vec is None or query_vec.size == 0:  # Explicitly check if query_vec is empty or None
         logger.error("Query vector is empty or invalid. Aborting.")
         return []
