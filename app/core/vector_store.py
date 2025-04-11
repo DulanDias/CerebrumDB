@@ -13,7 +13,7 @@ class VectorStore:
 
     def search(self, query_vec, top_k=5):
         D, I = self.index.search(np.array([query_vec]), top_k)
-        return [self.doc_map[i] for i in I[0]]
+        return [self.doc_map[i] for i in I[0] if i != -1]
 
     def save_index(self, path):
         faiss.write_index(self.index, path)
