@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+  cerebrumdb:
+    build: .
+    container_name: cerebrumdb
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - TRANSFORMER_MODEL=all-mpnet-base-v2
+      - CONTINUAL_LEARNING=true
+      - DATA_STORE_TYPE=json
+      - VECTOR_INDEX_PATH=vector_index/index.faiss
+    restart: unless-stopped
