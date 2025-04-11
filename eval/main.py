@@ -8,54 +8,30 @@ from eval.utils.timer import measure_latency
 RESULTS_DIR = "eval/results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
+ACCESS_TOKEN = "your_access_token_here"  # Replace with a valid access token
+
 def main():
-    datasets = {
-        "HotpotQA": hotpotqa.load_dataset(),
-        "NaturalQuestions": natural_questions.load_dataset(),
-        "MSMARCO": ms_marco.load_dataset(),
-    }
+    # Step 1: Load and process the dataset
+    dataset_path = "eval/datasets/hotpot_dev_fullwiki_v1.json"
+    data = hotpotqa.load_dataset(dataset_path)
+    documents = hotpotqa.prepare_documents(data)
 
-    runners = {
-        "FAISS-Only": faiss_only.run_query,
-        "RAG-DPR": rag_dpr.run_query,
-        "Cerebrum-MADB-Off": cerebrum_madb_off.run_query,
-        "Cerebrum-MADB-On": cerebrum_madb_on.run_query,
-    }
+    # Step 2: Ingest documents into the database
+    hotpotqa.ingest_documents(documents, ACCESS_TOKEN)
 
+    # Step 3: Run evaluation using cerebrum_madb_off
+    results = cerebrum_madb_off.run()
+
+    # Step 4: Evaluate using metrics
     metrics = {
-        "MRR@10": mrr.compute_mrr,
-        "nDCG@10": ndcg.compute_ndcg,
-        "Recall@10": recall.compute_recall,
+        "MRR": mrr.evaluate(results),
+        "NDCG": ndcg.evaluate(results),
+        "Recall": recall.evaluate(results)
     }
+    print("Evaluation Metrics:", metrics)
 
-    results = []
-
-    for dataset_name, dataset in datasets.items():
-        for runner_name, runner in runners.items():
-            print(f"Evaluating {runner_name} on {dataset_name}...")
-            all_metrics = {metric: [] for metric in metrics}
-            latencies = []
-
-            for query, correct_answer in dataset:
-                with measure_latency() as latency:
-                    retrieved = runner(query)
-                latencies.append(latency)
-
-                for metric_name, metric_fn in metrics.items():
-                    score = metric_fn({"retrieved": [r["doc_id"] for r in retrieved], "relevant": correct_answer})
-                    all_metrics[metric_name].append(score)
-
-            avg_metrics = {k: sum(v) / len(v) for k, v in all_metrics.items()}
-            avg_latency = sum(latencies) / len(latencies)
-
-            results.append({
-                "Model": runner_name,
-                "Dataset": dataset_name,
-                **avg_metrics,
-                "Avg Latency (ms)": avg_latency,
-            })
-
-    export_to_csv(results, os.path.join(RESULTS_DIR, "metrics_summary.csv"))
+    # Step 5: Export results to CSV
+    export_to_csv(results, os.path.join(RESULTS_DIR, "hotpotqa_results.csv"))
 
 if __name__ == "__main__":
     main()
