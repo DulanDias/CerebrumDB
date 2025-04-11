@@ -50,7 +50,138 @@ gunicorn app.main:app -k uvicorn.workers.UvicornWorker --workers 4 --bind 0.0.0.
 | GET    | `/document/{id}`   | Retrieve full document   |
 
 ---
+## 📘 Using the API: Step-by-Step Workflow
 
+This section walks through how to consume the CerebrumDB API from initialization to querying.
+
+---
+
+### 🧑‍💻 Step 1: Initialize the User Database
+
+```bash
+POST /user/init
+```
+
+Initializes a secure user database on disk. Run once.
+
+---
+
+### 👤 Step 2: Create a New User
+
+```bash
+POST /user/create
+Content-Type: application/json
+
+{
+  "user_id": "alice",
+  "password": "secret123",
+  "role": "editor"
+}
+```
+
+Roles supported:
+- `admin`: full access
+- `editor`: can add/update docs
+- `viewer`: read-only and query access
+
+---
+
+### 🔑 Step 3: Login and Get Access Token
+
+```bash
+POST /user/token
+Content-Type: application/x-www-form-urlencoded
+
+user_id=alice&password=secret123
+```
+
+Returns:
+
+```json
+{
+  "access_token": "eyJhbGci...",
+  "token_type": "bearer"
+}
+```
+
+Use this token in the `Authorization` header:
+
+```http
+Authorization: Bearer <access_token>
+```
+
+---
+
+### 📄 Step 4: Add a Document
+
+```bash
+POST /document
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "text": "Quantum physics explains the nature of particles.",
+  "meta": { "category": "science", "author": "alice" }
+}
+```
+
+---
+
+### 🔍 Step 5: Perform a Semantic Query
+
+```bash
+POST /query
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "query": "nature of subatomic particles",
+  "top_k": 3
+}
+```
+
+Returns ranked documents with scores and metadata.
+
+---
+
+### 📝 Step 6: Submit Relevance Feedback
+
+```bash
+POST /feedback
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "query": "nature of subatomic particles",
+  "doc_id": "xyz123",
+  "relevant": true
+}
+```
+
+This logs user-labeled feedback to support future model fine-tuning.
+
+---
+
+### 🔄 Optional: Update or Delete a Document
+
+```bash
+PUT /document/{id}
+DELETE /document/{id}
+```
+
+Requires `admin` or `editor` role for PUT, `admin` for DELETE.
+
+---
+
+All endpoints follow RESTful design and require valid JWT tokens for access.
+
+You can explore the API interactively at:
+
+```
+http://localhost:8000/docs
+```
+
+---
 ## ⚙️ Configuration
 
 You can customize your CerebrumDB setup via `.env` or `config.py`:
