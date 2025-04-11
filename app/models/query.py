@@ -1,10 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Dict, Optional
 
 class QueryInput(BaseModel):
-    query: str = Field(..., min_length=3)
-    filter: Optional[Dict[str, str]] = None
+    query: str
     top_k: int = 5
+    filter: Optional[Dict[str, str]] = None
 
 class QueryResult(BaseModel):
     doc_id: str

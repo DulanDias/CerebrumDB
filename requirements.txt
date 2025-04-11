@@ -6,3 +6,5 @@ faiss-cpu
 numpy
 python-dotenv
 loguru
+python-jose[cryptography]
+passlib[bcrypt]
