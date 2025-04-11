@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+gunicorn
+sentence-transformers
+faiss-cpu
+numpy
+python-dotenv
+loguru
