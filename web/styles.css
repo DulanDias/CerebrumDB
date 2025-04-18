@@ -1,0 +1,225 @@
+body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+header {
+    background-color: #4CAF50;
+    color: white;
+    text-align: center;
+    padding: 2rem 1rem;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+}
+
+header p {
+    margin: 1rem 0;
+    font-size: 1.2rem;
+}
+
+header .cta-button {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background-color: white;
+    color: #4CAF50;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+header .cta-button:hover {
+    background-color: #e8f5e9;
+}
+
+header.hero-banner {
+    background: linear-gradient(135deg, #4CAF50, #81C784);
+    color: white;
+    text-align: center;
+    padding: 4rem 1rem;
+}
+
+header.hero-banner .hero-content h1 {
+    font-size: 3rem;
+    margin: 0;
+}
+
+header.hero-banner .hero-content p {
+    font-size: 1.5rem;
+    margin: 1rem 0;
+}
+
+header.hero-banner .cta-button {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background-color: white;
+    color: #4CAF50;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+header.hero-banner .cta-button:hover {
+    background-color: #e8f5e9;
+}
+
+.hero-banner {
+    text-align: center;
+    padding: 2rem;
+}
+
+main {
+    padding: 2rem;
+}
+
+main section {
+    margin-bottom: 2rem;
+}
+
+main section h2 {
+    color: #333;
+    border-bottom: 2px solid #4CAF50;
+    padding-bottom: 0.5rem;
+}
+
+main section ul,
+main section ol {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+main section ul li,
+main section ol li {
+    margin-bottom: 0.5rem;
+}
+
+main section a {
+    color: #4CAF50;
+    text-decoration: none;
+}
+
+main section a:hover {
+    text-decoration: underline;
+}
+
+.card-section {
+    padding: 2rem;
+    background-color: #f9f9f9;
+    text-align: center;
+}
+
+.card-section h2 {
+    color: #333;
+    margin-bottom: 2rem;
+}
+
+.card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    flex: 1 1 calc(33.333% - 2rem);
+    max-width: calc(33.333% - 2rem);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.card img, .card svg {
+    margin-bottom: 1rem;
+}
+
+.card h3 {
+    color: #4caf50;
+}
+
+.card p {
+    color: #666;
+}
+
+.faq-section {
+    padding: 2rem;
+    background-color: #f1f1f1;
+}
+
+.faq-section h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.faq-item {
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: white;
+    overflow: hidden;
+}
+
+.faq-question {
+    width: 100%;
+    text-align: left;
+    padding: 1rem;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+faq-answer {
+    display: none;
+    padding: 1rem;
+    color: #555;
+    border-top: 1px solid #ddd;
+}
+
+footer {
+    text-align: center;
+    padding: 1rem;
+    background-color: #333;
+    color: white;
+}
+
+footer p {
+    margin: 0;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.cta-button:hover {
+    background-color: #feb47b;
+}
+
+@media (max-width: 768px) {
+    .card {
+        flex: 1 1 calc(50% - 2rem);
+        max-width: calc(50% - 2rem);
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+}

@@ -3,7 +3,7 @@ import requests
 from typing import List, Dict
 
 API_URL = "http://localhost:8000/document"
-ACCESS_TOKEN = "your_access_token_here"  # Replace with a valid access token
+ACCESS_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJhZG1pbiIsImV4cCI6MTc0NDQxNjAwM30.jk8Q5x8MKBjkzqvpGVk6DPJhF5M93Do6UKOhCJ7fUzE"  # Replace with a valid access token
 
 def load_dataset(file_path: str) -> List[Dict]:
     """
